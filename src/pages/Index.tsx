@@ -70,8 +70,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#E5DEFF] via-[#F2FCE2] to-[#D3E4FD] p-6">
+      <div className="max-w-4xl mx-auto space-y-8 backdrop-blur-sm bg-white/30 rounded-xl p-8 shadow-lg">
         <h1 className="text-4xl font-bold text-center text-primary">
           MCQ Generator & Quiz
         </h1>
