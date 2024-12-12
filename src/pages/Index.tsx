@@ -3,7 +3,7 @@ import TextInput from '@/components/TextInput';
 import QuizQuestion from '@/components/QuizQuestion';
 import Results from '@/components/Results';
 import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Question {
   question: string;
@@ -15,11 +15,13 @@ interface Question {
 
 const generateMCQs = async (text: string): Promise<Question[]> => {
   try {
-    // Prepare the prompt for GPT
-    const prompt = `I am providing you text: "${text}". I want you to see topic and text and change it into mcqs. Make sure you use easy and understandable english. Please format your response as a JSON array of objects with this structure:
+    const prompt = `Generate multiple choice questions based on this text: "${text}". 
+    Create questions that test understanding of key concepts. 
+    Make sure to use simple, clear English.
+    Format your response as a JSON array with this exact structure:
     [
       {
-        "question": "question text",
+        "question": "What is the main topic discussed?",
         "options": [
           {"text": "correct answer", "isCorrect": true},
           {"text": "wrong answer 1", "isCorrect": false},
@@ -27,28 +29,17 @@ const generateMCQs = async (text: string): Promise<Question[]> => {
           {"text": "wrong answer 3", "isCorrect": false}
         ]
       }
-    ]`;
+    ]
+    Generate at least 5 questions, maximum 20 questions.
+    Ensure each question has exactly one correct answer.
+    Make the wrong answers plausible but clearly incorrect.`;
 
-    // Use the window.gpt object to make the request
     const response = await window.gpt.complete(prompt);
-    
-    // Parse the response
     const mcqs = JSON.parse(response.choices[0].message.content);
-    
-    // Ensure we only return 20 questions maximum
-    return mcqs.slice(0, 20);
+    return mcqs.slice(0, 20); // Ensure maximum 20 questions
   } catch (error) {
     console.error('Error generating MCQs:', error);
-    // Return mock questions as fallback
-    return Array(20).fill(null).map((_, i) => ({
-      question: `Sample Question ${i + 1} about "${text.slice(0, 30)}..."`,
-      options: [
-        { text: "Correct Answer", isCorrect: true },
-        { text: "Wrong Answer 1", isCorrect: false },
-        { text: "Wrong Answer 2", isCorrect: false },
-        { text: "Wrong Answer 3", isCorrect: false },
-      ].sort(() => Math.random() - 0.5),
-    }));
+    throw error;
   }
 };
 
@@ -60,6 +51,7 @@ const Index = () => {
   const [selectedOption, setSelectedOption] = useState<number | undefined>();
   const [showResults, setShowResults] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState<number[]>([]);
   const { toast } = useToast();
 
   const handleGenerate = async (text: string) => {
@@ -72,6 +64,7 @@ const Index = () => {
       setAnswered(false);
       setSelectedOption(undefined);
       setShowResults(false);
+      setWrongAnswers([]);
       
       toast({
         title: "Questions Generated",
@@ -92,7 +85,11 @@ const Index = () => {
   const handleAnswer = (isCorrect: boolean, optionIndex: number) => {
     setSelectedOption(optionIndex);
     setAnswered(true);
-    if (isCorrect) setScore(score + 1);
+    if (isCorrect) {
+      setScore(score + 1);
+    } else {
+      setWrongAnswers([...wrongAnswers, currentQuestion]);
+    }
     
     setTimeout(() => {
       if (currentQuestion < questions.length - 1) {
@@ -112,6 +109,7 @@ const Index = () => {
     setAnswered(false);
     setSelectedOption(undefined);
     setShowResults(false);
+    setWrongAnswers([]);
   };
 
   return (
@@ -122,12 +120,13 @@ const Index = () => {
         </h1>
         
         {questions.length === 0 ? (
-          <TextInput onGenerate={handleGenerate} />
+          <TextInput onGenerate={handleGenerate} isLoading={isGenerating} />
         ) : showResults ? (
           <Results 
             score={score}
             totalQuestions={questions.length}
             onRetry={handleRetry}
+            wrongQuestions={wrongAnswers.map(index => questions[index])}
           />
         ) : (
           <div className="space-y-6">

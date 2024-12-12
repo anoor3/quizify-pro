@@ -3,13 +3,27 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
+interface Question {
+  question: string;
+  options: Array<{
+    text: string;
+    isCorrect: boolean;
+  }>;
+}
+
 interface ResultsProps {
   score: number;
   totalQuestions: number;
   onRetry: () => void;
+  wrongQuestions: Question[];
 }
 
-const Results: React.FC<ResultsProps> = ({ score, totalQuestions, onRetry }) => {
+const Results: React.FC<ResultsProps> = ({ 
+  score, 
+  totalQuestions, 
+  onRetry,
+  wrongQuestions 
+}) => {
   const percentage = (score / totalQuestions) * 100;
 
   return (
@@ -33,15 +47,30 @@ const Results: React.FC<ResultsProps> = ({ score, totalQuestions, onRetry }) => 
 
       <div className="space-y-4">
         <h3 className="font-semibold">Areas to Focus:</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-600">
-          {percentage < 70 && (
+        {wrongQuestions.length > 0 ? (
+          <div className="space-y-4">
+            <p className="text-gray-600">Review these topics:</p>
+            <ul className="list-disc list-inside space-y-2 text-gray-600">
+              {wrongQuestions.map((q, index) => (
+                <li key={index}>
+                  {q.question}
+                  <div className="ml-6 text-sm text-green-600">
+                    Correct answer: {q.options.find(opt => opt.isCorrect)?.text}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-green-600">Perfect score! Keep up the great work!</p>
+        )}
+        
+        {percentage < 70 && (
+          <ul className="list-disc list-inside space-y-2 text-gray-600">
             <li>Review the content carefully and try to understand key concepts</li>
-          )}
-          {percentage < 85 && (
-            <li>Practice more with similar questions to improve accuracy</li>
-          )}
-          <li>Take notes of questions you found challenging</li>
-        </ul>
+            <li>Take notes of questions you found challenging</li>
+          </ul>
+        )}
       </div>
 
       <Button 
