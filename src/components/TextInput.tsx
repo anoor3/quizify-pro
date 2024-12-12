@@ -6,11 +6,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 interface TextInputProps {
   onGenerate: (text: string) => void;
+  isLoading?: boolean;
 }
 
-const TextInput: React.FC<TextInputProps> = ({ onGenerate }) => {
+const TextInput: React.FC<TextInputProps> = ({ onGenerate, isLoading = false }) => {
   const [text, setText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
   const { toast } = useToast();
 
@@ -41,9 +41,7 @@ const TextInput: React.FC<TextInputProps> = ({ onGenerate }) => {
       return;
     }
 
-    setIsLoading(true);
     onGenerate(text);
-    setTimeout(() => setIsLoading(false), 1500);
   };
 
   const handlePayment = () => {
