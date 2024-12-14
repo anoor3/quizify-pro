@@ -4,6 +4,7 @@ import QuizQuestion from '@/components/QuizQuestion';
 import Results from '@/components/Results';
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Question {
   question: string;
@@ -15,36 +16,14 @@ interface Question {
 
 const generateMCQs = async (text: string): Promise<Question[]> => {
   try {
-    if (!window.gpt?.complete) {
-      throw new Error("GPT client is not initialized. Please try again later.");
-    }
+    const { data, error } = await supabase.functions.invoke('generate-mcqs', {
+      body: { text }
+    });
 
-    const prompt = `Generate multiple choice questions based on this text: "${text}". 
-    Create questions that test understanding of key concepts. 
-    Make sure to use simple, clear English.
-    Format your response as a JSON array with this exact structure:
-    [
-      {
-        "question": "What is the main topic discussed?",
-        "options": [
-          {"text": "correct answer", "isCorrect": true},
-          {"text": "wrong answer 1", "isCorrect": false},
-          {"text": "wrong answer 2", "isCorrect": false},
-          {"text": "wrong answer 3", "isCorrect": false}
-        ]
-      }
-    ]
-    Generate at least 5 questions, maximum 20 questions.
-    Ensure each question has exactly one correct answer.
-    Make the wrong answers plausible but clearly incorrect.`;
-
-    const response = await window.gpt.complete(prompt);
-    if (!response?.choices?.[0]?.message?.content) {
-      throw new Error("Invalid response from GPT service");
-    }
+    if (error) throw error;
+    if (!Array.isArray(data)) throw new Error('Invalid response format');
     
-    const mcqs = JSON.parse(response.choices[0].message.content);
-    return mcqs.slice(0, 20); // Ensure maximum 20 questions
+    return data.slice(0, 20); // Ensure maximum 20 questions
   } catch (error) {
     console.error('Error generating MCQs:', error);
     throw new Error(error instanceof Error ? error.message : "Failed to generate questions");
