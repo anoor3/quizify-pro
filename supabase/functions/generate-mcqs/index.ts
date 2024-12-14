@@ -16,6 +16,16 @@ serve(async (req) => {
   try {
     const { text } = await req.json();
 
+    if (!text) {
+      throw new Error('No text provided');
+    }
+
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    console.log('Generating MCQs for text:', text.substring(0, 50) + '...');
+
     const prompt = `Generate multiple choice questions based on this text: "${text}". 
     Create questions that test understanding of key concepts. 
     Make sure to use simple, clear English.
@@ -47,16 +57,25 @@ serve(async (req) => {
           { role: 'system', content: 'You are a helpful assistant that generates multiple choice questions.' },
           { role: 'user', content: prompt }
         ],
+        temperature: 0.7,
       }),
     });
 
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('OpenAI API error:', error);
+      throw new Error(error.error?.message || 'Failed to generate questions');
+    }
+
     const data = await response.json();
+    console.log('Received response from OpenAI');
     
     if (!data.choices?.[0]?.message?.content) {
       throw new Error('Invalid response from OpenAI');
     }
 
     const mcqs = JSON.parse(data.choices[0].message.content);
+    console.log(`Generated ${mcqs.length} questions successfully`);
 
     return new Response(JSON.stringify(mcqs), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -15,14 +15,23 @@ interface Question {
 }
 
 const generateMCQs = async (text: string): Promise<Question[]> => {
+  console.log('Generating MCQs...');
   try {
     const { data, error } = await supabase.functions.invoke('generate-mcqs', {
       body: { text }
     });
 
-    if (error) throw error;
-    if (!Array.isArray(data)) throw new Error('Invalid response format');
+    if (error) {
+      console.error('Supabase function error:', error);
+      throw error;
+    }
+
+    if (!Array.isArray(data)) {
+      console.error('Invalid response format:', data);
+      throw new Error('Invalid response format');
+    }
     
+    console.log('MCQs generated successfully:', data.length, 'questions');
     return data.slice(0, 20); // Ensure maximum 20 questions
   } catch (error) {
     console.error('Error generating MCQs:', error);
@@ -55,7 +64,8 @@ const Index = () => {
       
       toast({
         title: "Questions Generated",
-        description: "Your MCQs are ready. Good luck!",
+        description: `Generated ${generatedQuestions.length} questions. Good luck!`,
+        variant: "default",
       });
     } catch (error) {
       console.error('Error:', error);
