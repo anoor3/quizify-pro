@@ -15,6 +15,10 @@ interface Question {
 
 const generateMCQs = async (text: string): Promise<Question[]> => {
   try {
+    if (!window.gpt?.complete) {
+      throw new Error("GPT client is not initialized. Please try again later.");
+    }
+
     const prompt = `Generate multiple choice questions based on this text: "${text}". 
     Create questions that test understanding of key concepts. 
     Make sure to use simple, clear English.
@@ -35,11 +39,15 @@ const generateMCQs = async (text: string): Promise<Question[]> => {
     Make the wrong answers plausible but clearly incorrect.`;
 
     const response = await window.gpt.complete(prompt);
+    if (!response?.choices?.[0]?.message?.content) {
+      throw new Error("Invalid response from GPT service");
+    }
+    
     const mcqs = JSON.parse(response.choices[0].message.content);
     return mcqs.slice(0, 20); // Ensure maximum 20 questions
   } catch (error) {
     console.error('Error generating MCQs:', error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : "Failed to generate questions");
   }
 };
 
@@ -69,14 +77,15 @@ const Index = () => {
       toast({
         title: "Questions Generated",
         description: "Your MCQs are ready. Good luck!",
-        variant: "success",
       });
     } catch (error) {
+      console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Failed to generate questions. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate questions. Please try again.",
         variant: "destructive",
       });
+      setQuestions([]);
     } finally {
       setIsGenerating(false);
     }
