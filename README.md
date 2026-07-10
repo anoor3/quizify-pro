@@ -1,5 +1,8 @@
 # Welcome to your Lovable project
 
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Abdullah%20Noor-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/abdullah-noor1/)
+[![Email](https://img.shields.io/badge/Email-abdullahnoorllc%40gmail.com-EA4335?logo=gmail&logoColor=white)](mailto:abdullahnoorllc@gmail.com)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/74459c29-2f36-4f20-b24c-5462cc34bd22
